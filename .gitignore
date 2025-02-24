@@ -134,4 +134,8 @@ data/collections/
 data/runs/run.msmarco-v2-passage.txt
 data/msmarco/
 data/results/
-
+data/datasets/
+data/hf_datasets/
+data/indexes/
+longeval_statistics.py
+ms_marcov1_statistics.py

@@ -4,8 +4,10 @@ import logging
 import os
 
 # Specify the GPU ID to use
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+from t5_reranker import T5Reranker  # noqa: E402
 
 import torch  # noqa: E402
 from datasets import load_from_disk  # noqa: E402
@@ -21,42 +23,45 @@ from transformers import (  # noqa: E402
     TrainingArguments,
 )
 
+from safetensors.torch import save_model
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+
+
 seed = 92
 
-dataset = "depth_based_70_30_180"
+dataset = "shallow_based_1250_2_4"
 # Configs
 DATASET_PATH = (
     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/{dataset}/"
 )
 MODEL_SAVE_PATH = (
-    f"../data/results/models/v2/bm25/one_to_one/{seed}/{dataset}/"
+    f"../data/results/models/t5/bm25/one_to_one/{seed}/{dataset}/"
 )
 CHECKPOINT_PATH = (
-    f"../data/results/checkpoints/v2/bm25/one_to_one/{seed}/{dataset}/"
+    f"../data/results/checkpoints/t5/bm25/one_to_one/{seed}/{dataset}/"
 )
 
 
 def tokenize_function(tokenizer, examples):
-    """Tokenize the examples.
-
-    Args:
-        tokenizer: tokenizer to use.
-        examples: examples to tokenize.
-    """
-    # Tokenize the query and document texts and return the inputs necessary
+    """Proper T5 input formatting"""
+    combined = [
+        f"Query: {q} Document: {d} </s>"  # Add T5 end-of-sequence token
+        for q, d in zip(examples["query_text"], examples["doc_text"])
+    ]
+    
     return tokenizer(
-        examples["query_text"],
-        examples["doc_text"],
+        combined,
         truncation=True,
         padding="max_length",
         max_length=512,
-        return_tensors="pt",
+        return_tensors="pt"  # Keep tensor output
     )
+
 
 
 def compute_metrics(pred):
@@ -83,8 +88,7 @@ dataset_dict = dataset.train_test_split(test_size=0.2)
 
 # Initialize the tokenizer
 # tokenizer = BertTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L12-v2")
-# tokenizer = AutoTokenizer.from_pretrained("google-t5/t5-small")
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("google-t5/t5-small")
 
 # Tokenize the dataset
 logging.info("Tokenizing the training set...")
@@ -96,7 +100,7 @@ logging.info("Tokenizing the validation set...")
 tokenized_val_dataset = dataset_dict["test"].map(
     lambda examples: tokenize_function(tokenizer, examples), batched=True
 )
-
+print(tokenized_train_dataset[0])
 # Rename the relevance column to labels
 tokenized_train_dataset = tokenized_train_dataset.map(
     lambda e: {"labels": e["relevance"]}
@@ -108,29 +112,33 @@ tokenized_val_dataset = tokenized_val_dataset.map(
 # Set format for PyTorch
 tokenized_train_dataset.set_format(
     type="torch",
-    columns=["input_ids", "token_type_ids", "attention_mask", "labels"],
+    columns=["input_ids", "attention_mask", "labels"],
 )
 tokenized_val_dataset.set_format(
     type="torch",
-    columns=["input_ids", "token_type_ids", "attention_mask", "labels"],
+    columns=["input_ids", "attention_mask", "labels"],
 )
 
 # Initialize the model
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased", num_labels=2
-)
+# model = BertForSequenceClassification.from_pretrained(
+#     "bert-base-uncased", num_labels=2
+# )
 # model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L12-v2")
 # model = AutoModelForSeq2SeqLM.from_pretrained("google-t5/t5-small")
+base_model = AutoModelForSeq2SeqLM.from_pretrained("google-t5/t5-small")
+model = T5Reranker(base_model)
 
 # Define the training arguments
 training_args = TrainingArguments(
     output_dir=CHECKPOINT_PATH,
+    save_safetensors=False,  # Force Safetensors format
+    save_total_limit=1,  # Only keep best model,
     evaluation_strategy="epoch",
     save_strategy="epoch",
     num_train_epochs=10,
     learning_rate=2e-5,
-    per_device_train_batch_size=8,
-    per_device_eval_batch_size=8,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
     warmup_steps=500,
     weight_decay=0.01,
     logging_dir="../data/logs",
@@ -160,5 +168,22 @@ trainer.train()
 
 # Save the model
 logging.info("Saving the model and tokenizer...")
+
 trainer.save_model(MODEL_SAVE_PATH)
 tokenizer.save_pretrained(MODEL_SAVE_PATH)
+
+# # Explicitly handle shared weights
+# model.base_model.shared = model.base_model.encoder.embed_tokens
+# model.base_model.decoder.embed_tokens = model.base_model.shared
+# model.base_model.lm_head.weight = model.base_model.shared.weight
+
+# # Save using Safetensors format
+# save_model(
+#     model,
+#     os.path.join(MODEL_SAVE_PATH, "model.safetensors"),
+#     metadata={"format": "pt", "architecture": "T5Reranker"}
+# )
+
+# # Save tokenizer and config separately
+# tokenizer.save_pretrained(MODEL_SAVE_PATH)
+# model.config.save_pretrained(MODEL_SAVE_PATH)

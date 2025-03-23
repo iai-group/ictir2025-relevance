@@ -137,5 +137,6 @@ data/results/
 data/datasets/
 data/hf_datasets/
 data/indexes/
+data/longeval/
 longeval_statistics.py
 ms_marcov1_statistics.py

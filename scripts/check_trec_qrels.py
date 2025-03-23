@@ -24,15 +24,15 @@ def print_relevant_judgment_stats(judgments_count, dataset_name):
         print(f"Query ID: {query_id} has {count} relevant judgments")
 
 
-trec_2022 = ir_datasets.load("msmarco-passage-v2/trec-dl-2022/judged")
-trec_2021_judged = ir_datasets.load("msmarco-passage-v2/trec-dl-2021/judged")
+trec_2020 = ir_datasets.load("msmarco-passage/trec-dl-2020/judged")
+trec_2019_judged = ir_datasets.load("msmarco-passage/trec-dl-2019/judged")
 
-relevant_judgments_count_2022 = count_relevant_judgments(trec_2022)
-relevant_judgments_count_2021_judged = count_relevant_judgments(
-    trec_2021_judged
+relevant_judgments_count_2020 = count_relevant_judgments(trec_2020)
+relevant_judgments_count_2019_judged = count_relevant_judgments(
+    trec_2019_judged
 )
 
-print_relevant_judgment_stats(relevant_judgments_count_2022, "TREC 2022")
+print_relevant_judgment_stats(relevant_judgments_count_2020, "TREC 2020")
 print_relevant_judgment_stats(
-    relevant_judgments_count_2021_judged, "TREC 2021 Judged"
+    relevant_judgments_count_2019_judged, "TREC 2019 Judged"
 )

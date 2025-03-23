@@ -5,12 +5,16 @@ import json
 import logging
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+
+from t5_reranker import T5Reranker  # noqa: E402
 
 import ir_datasets  # noqa: E402
 import torch  # noqa: E402
 from pyserini.search.lucene import LuceneSearcher  # noqa: E402
-from transformers import BertForSequenceClassification, BertTokenizer
+from transformers import BertForSequenceClassification, BertTokenizer, AutoTokenizer, AutoModelForSeq2SeqLM
 from transformers import logging as tf_logging  # noqa: E402
 from tqdm import tqdm  # noqa: E402
 
@@ -45,17 +49,18 @@ searcher = LuceneSearcher.from_prebuilt_index("msmarco-v1-passage")
 # searcher = LuceneSearcher("../data/indexes/longeval_st_index/")
 
 # Set the seed
-seed = "92"
+seed = "5"
 
 # dataset name
-dataset_name = "depth_based_70_30_180"
+dataset_name = "T5-shallow-based-1250-2-4"
 
 # Load model and tokenizer
-model_path = f"/home/stud/giturra/bhome/deep_vs_shallow/data/results/models/v2/bm25/one_to_one/{seed}/{dataset_name}"
-# model_path = "bert-base-uncased"
+model_path = f"/home/stud/giturra/bhome/deep_vs_shallow/data/results/models/t5/bm25/one_to_one/92/shallow_based_1250_2_4"
 logging.info(f"Loading model and tokenizer from: {model_path}")
-tokenizer = BertTokenizer.from_pretrained(model_path)
-model = BertForSequenceClassification.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
+model = T5Reranker(base_model)
+model.load_state_dict(torch.load(f"{model_path}/pytorch_model.bin"))
 model.to(device)
 model.eval()
 
@@ -102,27 +107,25 @@ with open(run_file_path, "w") as run_file:
                 max_length=512,
                 truncation=True,
                 padding=True,
-            )
+            ).to(device)
 
             # Move each tensor in the inputs dictionary to the specified device
-            inputs = {k: v.to(device) for k, v in inputs.items()}
+            #inputs = {k: v.to(device) for k, v in inputs.items()}
 
             with torch.no_grad():
-                outputs = model(**inputs)
+                outputs = model(inputs.input_ids, inputs.attention_mask)
+            probabilities = torch.softmax(outputs["logits"], dim=1)
 
-      
-            probabilities = torch.softmax(outputs.logits, dim=1)
             score = probabilities[:, 1].item()
 
             reranked_docs.append((hit.docid, score))
- 
+
         # Sort the documents by score for this query
         reranked_docs.sort(key=lambda x: x[1], reverse=True)
 
         # Write the reranked results to the run file
         for i, (docid, score) in enumerate(reranked_docs):
             run_file.write(f"{query_id} Q0 {docid} {i+1} {score} {run_name}\n")
-
 logging.info("Model evaluation complete.")
 
 logging.info(f"Run file saved to: {run_file_path}")

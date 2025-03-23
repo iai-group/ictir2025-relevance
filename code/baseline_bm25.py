@@ -11,10 +11,10 @@ logging.basicConfig(
 )
 
 # Load the prebuilt index
-searcher = LuceneSearcher.from_prebuilt_index("msmarco-v2-passage")
+searcher = LuceneSearcher.from_prebuilt_index("msmarco-v1-passage")
 
 # Load queries
-query_dataset = ir_datasets.load("msmarco-passage-v2/dev1")
+query_dataset = ir_datasets.load("msmarco-passage/dev/2")
 queries = {}
 for query in query_dataset.queries_iter():
     queries[query.query_id] = query.text

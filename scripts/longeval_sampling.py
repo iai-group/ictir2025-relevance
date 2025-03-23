@@ -6,6 +6,7 @@ from collections import defaultdict
 from datasets import Dataset
 from halo import Halo
 from pyserini.search.lucene import LuceneSearcher
+from tqdm import tqdm
 
 
 def parse_trec_document(file_path):
@@ -238,19 +239,19 @@ def training_set_to_dataset(training_set, query_text_map, doc_text_map):
 
 
 if __name__ == "__main__":
-    index_path = "../data/indexes/longeval_index/"
-    corpus_path = "../data/collections/longeval/publish/English/Documents/Trec/"
+    index_path = "../data/indexes/longeval_st_index/"
+    corpus_path = "../data/collections/longeval/train/English/Documents/Trec"
     corpus_queries_path_1 = (
-        "../data/collections/longeval/publish/English/Queries/heldout.tsv"
+        "../data/collections/longeval/train/English/Queries/heldout.tsv"
     )
     corpus_queries_path_2 = (
-        "../data/collections/longeval/publish/French/Queries/train.tsv"
+        "../data/collections/longeval/train/French/Queries/train.tsv"
     )
-    depth_query_file = "../data/wt-queries-mapping.txt"
-    depth_qrels_file = "../data/annotations_wt.qrels"
+    depth_query_file = "../data/collections/longeval/wt-queries-mapping.txt"
+    depth_qrels_file = "../data/collections/longeval/annotations_wt.qrels"
     shallow_qrel_file_1 = "../data/collections/longeval/longeval-relevance-judgements/heldout-test.txt"
     shallow_qrel_file_2 = (
-        "../data/collections/longeval/publish/French/Qrels/train.txt"
+        "../data/collections/longeval/train/French/Qrels/train.txt"
     )
 
     # Initialize BM25 searcher
@@ -260,7 +261,7 @@ if __name__ == "__main__":
     spinner.start()
     # Load documents
     doc_text_map = {}
-    for filename in os.listdir(corpus_path):
+    for filename in tqdm(os.listdir(corpus_path)):
         if filename.endswith(".txt"):
             file_path = os.path.join(corpus_path, filename)
             doc_text_map.update(parse_trec_document(file_path))

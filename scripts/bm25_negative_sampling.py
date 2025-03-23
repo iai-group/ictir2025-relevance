@@ -30,11 +30,13 @@ def select_queries(qrels_by_query_id, num_queries, num_rels_per_query):
     eligible_queries = []
     for query, qrels in qrels_by_query_id.items():
         relevant_qrels = [qrel for qrel in qrels if qrel[1] >= 1]
+
         if len(relevant_qrels) >= num_rels_per_query:
             eligible_queries.append(query)
 
     # Randomly select queries from the list of eligible queries
     selected_queries = []
+    
     while eligible_queries and len(selected_queries) < num_queries:
         query = random.choice(eligible_queries)
         selected_queries.append(query)
@@ -43,7 +45,7 @@ def select_queries(qrels_by_query_id, num_queries, num_rels_per_query):
     # Throw an error if not enough queries are found
     if len(selected_queries) < num_queries:
         raise ValueError(
-            f"Could not find {num_queries} queries with {num_rels_per_query}"
+            f"Could not find {num_queries} queries with {num_rels_per_query} "
             f"relevance judgments."
         )
 
@@ -80,6 +82,7 @@ def create_training_set(
     query_text_map,
     num_queries,
     num_rels_per_query,
+    neg_sample_prop=1,
     seed=42,
     skip_top_k=50,
     combine_trec_datasets=False,
@@ -102,8 +105,8 @@ def create_training_set(
             Defaults to 30.
         skip_top_k (int, optional): The number of top-ranked documents to skip
             when selecting negative examples. Defaults to 50.
-        combine_trec_datasets (bool, optional): Whether to combine the TREC 2021
-            and 2022 datasets. Used when a larger pool is needed.
+        combine_trec_datasets (bool, optional): Whether to combine the TREC 2019
+            and 2020 datasets. Used when a larger pool is needed.
             Defaults to False.
 
     Returns:
@@ -125,7 +128,7 @@ def create_training_set(
         docid_set.add(qrel.doc_id)
 
     if combine_trec_datasets:
-        for qrel in dataset_trec_2022.qrels_iter():
+        for qrel in dataset_trec_2020.qrels_iter():
             qrels_by_query_id[qrel.query_id].append(
                 (qrel.doc_id, qrel.relevance)
             )
@@ -146,11 +149,11 @@ def create_training_set(
         # Retrieve documents using BM25 and filter out positive documents
         # Targets documents lower in the BM25 ranking
         # hits = searcher.search(query_text, k=100 + len(positive_docs))
-        hits = searcher.search(query_text, k=100 + len(positive_docs) * 4)
+        hits = searcher.search(query_text, k=100 + len(positive_docs) * 4 * neg_sample_prop)
         for hit in hits[skip_top_k:]:
             if (
                 hit.docid not in positive_docs
-                and len(negative_docs) < num_rels_per_query * 4
+                and len(negative_docs) < num_rels_per_query * neg_sample_prop
             ):
                 if hit.docid is tuple:
                     negative_docs.append(hit.docid[0])
@@ -164,7 +167,6 @@ def create_training_set(
 
         for neg_doc_id in negative_docs:
             training_set.append((qid, neg_doc_id, 0))
-
     return training_set
 
 
@@ -232,46 +234,50 @@ if __name__ == "__main__":
 
     # Load the datasets
     spinner.start()
-    dataset_trec_2021 = ir_datasets.load(
-        "msmarco-passage-v2/trec-dl-2021/judged"
+    dataset_trec_2019 = ir_datasets.load(
+        "msmarco-passage/trec-dl-2019/judged"
     )
-    dataset_trec_2022 = ir_datasets.load(
-        "msmarco-passage-v2/trec-dl-2022/judged"
+    dataset_trec_2020 = ir_datasets.load(
+        "msmarco-passage/trec-dl-2020/judged"
     )
-    dataset_train = ir_datasets.load("msmarco-passage-v2/train")
+    dataset_train = ir_datasets.load("msmarco-passage/train/judged")
     spinner.succeed("Datasets loaded.")
 
     # Map IDs to texts
     spinner.start("Mapping IDs to texts...")
-    query_text_map_trec_2021, doc_text_map_trec_2021 = map_ids_to_texts(
-        dataset_trec_2021
+    query_text_map_trec_2019, doc_text_map_trec_2019 = map_ids_to_texts(
+        dataset_trec_2019
     )
-    query_text_map_trec_2022, doc_text_map_trec_2022 = map_ids_to_texts(
-        dataset_trec_2022
+    query_text_map_trec_2020, doc_text_map_trec_2020 = map_ids_to_texts(
+        dataset_trec_2020
     )
 
     combined_query_text_map = {
-        **query_text_map_trec_2021,
-        **query_text_map_trec_2022,
+        **query_text_map_trec_2019,
+        **query_text_map_trec_2020,
     }
-    combined_doc_text_map = {**doc_text_map_trec_2021, **doc_text_map_trec_2022}
+    combined_doc_text_map = {**doc_text_map_trec_2019, **doc_text_map_trec_2020}
 
     query_text_map_train, doc_text_map_train = map_ids_to_texts(dataset_train)
     spinner.succeed("IDs mapped to texts.")
 
     # Initialize BM25 searcher
-    searcher = LuceneSearcher.from_prebuilt_index("msmarco-v2-passage")
+    searcher = LuceneSearcher.from_prebuilt_index("msmarco-v1-passage")
+
+    # Seed for reproducibility
+    seed = 92
 
     # Generate training sets
 
     # Depth based training sets
     spinner.start("Creating depth-based training sets...")
     depth_based_1 = create_training_set(
-        dataset_trec_2021,
+        dataset_trec_2019,
         combined_query_text_map,
         50,
         50,
-        seed=42,
+        neg_sample_prop=4,
+        seed=seed,
         combine_trec_datasets=True,
     )
     spinner.succeed("Depth-based 1 training set created.")
@@ -279,11 +285,12 @@ if __name__ == "__main__":
 
     spinner.start("Creating depth-based training sets...")
     depth_based_2 = create_training_set(
-        dataset_trec_2021,
+        dataset_trec_2019,
         combined_query_text_map,
         50,
-        100,
-        seed=42,
+        50,
+        neg_sample_prop=6,
+        seed=seed,
         combine_trec_datasets=True,
     )
     spinner.succeed("Depth-based 2 training set created.")
@@ -291,11 +298,12 @@ if __name__ == "__main__":
 
     spinner.start("Creating depth-based training sets...")
     depth_based_3 = create_training_set(
-        dataset_trec_2021,
+        dataset_trec_2019,
         combined_query_text_map,
-        50,
-        50,
-        seed=5,
+        70,
+        30,
+        neg_sample_prop=4,
+        seed=seed,
         combine_trec_datasets=True,
     )
     spinner.succeed("Depth-based 3 training set created.")
@@ -303,11 +311,12 @@ if __name__ == "__main__":
 
     spinner.start("Creating depth-based training sets...")
     depth_based_4 = create_training_set(
-        dataset_trec_2021,
+        dataset_trec_2019,
         combined_query_text_map,
-        50,
-        100,
-        seed=5,
+        70,
+        30,
+        neg_sample_prop=6,
+        seed=seed,
         combine_trec_datasets=True,
     )
     spinner.succeed("Depth-based 4 training set created.")
@@ -322,7 +331,8 @@ if __name__ == "__main__":
         query_text_map_train,
         2500,
         1,
-        seed=42,
+        neg_sample_prop=4,
+        seed=seed,
     )
     spinner.succeed("Shallow-based 1 training set created.")
     check_training_set(shallow_based_1)
@@ -331,9 +341,10 @@ if __name__ == "__main__":
     shallow_based_2 = create_training_set(
         dataset_train,
         query_text_map_train,
-        5000,
+        2500,
         1,
-        seed=42,
+        neg_sample_prop=6,
+        seed=seed,
     )
     spinner.succeed("Shallow-based 2 training set created.")
     check_training_set(shallow_based_2)
@@ -342,9 +353,10 @@ if __name__ == "__main__":
     shallow_based_3 = create_training_set(
         dataset_train,
         query_text_map_train,
-        2500,
+        2100,
         1,
-        seed=5,
+        neg_sample_prop=4,
+        seed=seed,
     )
     spinner.succeed("Shallow-based 3 training set created.")
     check_training_set(shallow_based_3)
@@ -353,9 +365,10 @@ if __name__ == "__main__":
     shallow_based_4 = create_training_set(
         dataset_train,
         query_text_map_train,
-        5000,
+        2100,
         1,
-        seed=5,
+        neg_sample_prop=6,
+        seed=seed,
     )
     spinner.succeed("Shallow-based 4 training set created.")
     check_training_set(shallow_based_4)
@@ -415,31 +428,32 @@ if __name__ == "__main__":
     # Save the datasets
     spinner.start("Saving datasets...")
     hf_dataset_depth_1.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/42/depth_based_50_100"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_50_50_200"
     )
     hf_dataset_depth_2.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/42/depth_based_50_200"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_50_50_300"
     )
 
     hf_dataset_shallow_1.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/42/shallow_based_2500_2"
+       f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2500_1_4"
     )
+
     hf_dataset_shallow_2.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/42/shallow_based_5000_2"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2500_1_6"
     )
 
     hf_dataset_depth_3.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/5/depth_based_50_100"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_120"
     )
     hf_dataset_depth_4.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/5/depth_based_50_200"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_180"
     )
 
     hf_dataset_shallow_3.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/5/shallow_based_2500_2"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2100_1_4"
     )
     hf_dataset_shallow_4.save_to_disk(
-        "../data/hf_datasets/test/bm25/one_to_four/5/shallow_based_5000_2"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2100_1_6"
     )
 
     spinner.succeed("Huggingface datasets saved.")

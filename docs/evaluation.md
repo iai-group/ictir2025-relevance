@@ -47,3 +47,9 @@ Once you have your reranked results, use the `trec_eval` software to calculate t
 ```bash
 trec_eval -m map -m ndcg -m recip_rank path_to_qrels path_to_run_file
 ```
+
+## In case command is not working
+
+```bash
+export PATH=$PATH:/path/to/trec_eval
+```

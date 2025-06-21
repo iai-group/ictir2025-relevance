@@ -81,8 +81,6 @@ logging.info("Splitting the dataset into training and validation sets...")
 dataset_dict = dataset.train_test_split(test_size=0.2)
 
 # Initialize the tokenizer
-# tokenizer = BertTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L12-v2")
-# tokenizer = AutoTokenizer.from_pretrained("google-t5/t5-small")
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
 # Tokenize the dataset

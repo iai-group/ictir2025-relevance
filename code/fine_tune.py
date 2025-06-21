@@ -13,9 +13,6 @@ from sklearn.metrics import accuracy_score, f1_score  # noqa: E402
 from transformers import (  # noqa: E402
     BertForSequenceClassification,
     BertTokenizer,
-    AutoTokenizer,
-    AutoModel,
-    AutoModelForSeq2SeqLM,
     EarlyStoppingCallback,
     Trainer,
     TrainingArguments,

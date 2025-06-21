@@ -35,7 +35,7 @@ def print_relevant_judgment_stats(judgments_count, dataset_name):
 
 if __name__ == "__main__":
     # Load qrels file
-    qrels_file = "../data/collections/longeval/publish/French/Qrels/train.txt"
+    qrels_file = "../data/collections/longeval/train/French/Qrels/train.txt"
     qrels = load_qrels(qrels_file)
 
     # Count relevant judgments

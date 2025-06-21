@@ -93,9 +93,6 @@ termcolor==2.4.0
 threadpoolctl==3.3.0
 tokenizers==0.15.2
 tomli==2.0.1
-torch==2.2.1+cu118
-torchaudio==2.2.1+cu118
-torchvision==0.17.1+cu118
 tqdm==4.66.2
 transformers==4.38.1
 trec-car-tools==2.6

@@ -42,7 +42,7 @@ Activate the same environment that you used to create the trainingsets (rerankin
 Change into the `code` folder and run the script for reranking:
 
 ```
-python reranking.py
+python rerank.py
 ```
 
 Make sure to change the filepath to where your model is saved and also where you want the run file that the script will make to be saved.

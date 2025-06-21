@@ -1,13 +1,9 @@
-import csv
-import os
-import random
-from collections import defaultdict
-
 from datasets import Dataset
 from halo import Halo
 from pyserini.search.lucene import LuceneSearcher
 from tqdm import tqdm
-
+import os
+import csv
 
 def parse_trec_document(file_path):
     """Parse a TREC formatted document."""
@@ -101,7 +97,6 @@ def select_queries(qrels_by_query_id, num_queries, num_rels_per_query):
 
     # Throw an error if not enough queries are found
     if len(selected_queries) < num_queries:
-        print(len(list(selected_queries)))
         raise ValueError(
             f"Could not find {num_queries} queries with {num_rels_per_query}"
             f"relevance judgments."
@@ -170,10 +165,6 @@ def create_depth_training_set(
     random.seed(seed)
     training_set = []
 
-    selected_queries = select_queries(
-        qrels_by_query_id, num_queries, num_rels_per_query
-    )
-
     for qid, qrels in tqdm(qrels_by_query_id.items()):
         query_text = query_text_map[qid]
         positive_docs = [qrel for qrel in qrels if qrel[1] >= 1]
@@ -198,9 +189,6 @@ def create_depth_training_set(
 
         for neg_doc_id in negative_docs:
             training_set.append((qid, neg_doc_id, 0))
-
-    print(f"number of positive examples depth {len(positive_docs)}")
-    print(f"number of negative examples depth {len(negative_docs)}")
 
     return training_set
 
@@ -244,94 +232,51 @@ def training_set_to_dataset(training_set, query_text_map, doc_text_map):
     dataset = Dataset.from_dict(data_dict)
     return dataset
 
+index_path = "../data/indexes/longeval_st_index/"
+corpus_path = "../data/collections/longeval/train/English/Documents/Trec2"
+corpus_queries_path_1 = (
+    "../data/collections/longeval/train/English/Queries/heldout.tsv"
+)
+corpus_queries_path_2 = (
+    "../data/collections/longeval/train/English/Queries/train.tsv"
+)
+corpus_queries_path_3 = (
+    "../data/collections/longeval/train/French/Queries/train.tsv"
+)
+depth_query_file = "../data/collections/longeval/wt-queries-mapping.txt"
+depth_qrels_file = "../data/collections/longeval/annotations_wt.qrels"
+shallow_qrel_file_1 = "../data/collections/longeval/longeval-relevance-judgements/heldout-test.txt"
+shallow_qrel_file_2 = (
+    "../data/collections/longeval/train/French/Qrels/train.txt"
+)
 
-if __name__ == "__main__":
-    index_path = "../data/indexes/longeval_st_index/"
-    corpus_path = "../data/collections/longeval/train/English/Documents/Trec"
-    corpus_queries_path_1 = (
-        "../data/collections/longeval/train/English/Queries/heldout.tsv"
-    )
-    corpus_queries_path_2 = (
-        "../data/collections/longeval/train/English/Queries/train.tsv"
-    )
-    depth_query_file = "../data/collections/longeval/wt-queries-mapping.txt"
-    depth_qrels_file = "../data/collections/longeval/annotations_wt.qrels"
-    shallow_qrel_file_1 = "../data/collections/longeval/longeval-relevance-judgements/heldout-test.txt"
-    shallow_qrel_file_2 = (
-        "../data/collections/longeval/train/French/Qrels/train.txt"
-    )
+# # Initialize BM25 searcher
+# searcher = LuceneSearcher(index_path)
 
-    # Initialize BM25 searcher
-    searcher = LuceneSearcher(index_path)
+# spinner = Halo(text="Loading documents...", spinner="dots")
+# spinner.start()
+# # Load documents
+# doc_text_map = {}
+# for filename in tqdm(os.listdir(corpus_path)):
+#     if filename.endswith(".txt"):
+#         file_path = os.path.join(corpus_path, filename)
+#         doc_text_map.update(parse_trec_document(file_path))
+# spinner.succeed("Documents loaded.")
 
-    spinner = Halo(text="Loading documents...", spinner="dots")
-    spinner.start()
-    # Load documents
-    doc_text_map = {}
-    for filename in tqdm(os.listdir(corpus_path)):
-        if filename.endswith(".txt"):
-            file_path = os.path.join(corpus_path, filename)
-            doc_text_map.update(parse_trec_document(file_path))
-    spinner.succeed("Documents loaded.")
+shallow_query_text_map_1 = load_queries(corpus_queries_path_1)
+# print(len(shallow_query_text_map_1.keys()))
+shallow_query_text_map_2 = load_queries(corpus_queries_path_2)
 
-    spinner.start("Loading queries and qrels...")
-    # Load queries and qrels
-    wt_query_text_map = load_queries_file(depth_query_file)
-    depth_qrels_by_query_id = load_qrels([depth_qrels_file])
+shallow_query_text_map_3 = load_queries(corpus_queries_path_3)
 
-    shallow_query_text_map_1 = load_queries(corpus_queries_path_1)
+print(set(shallow_query_text_map_3.keys()) == set(shallow_query_text_map_2.keys()))
 
-    shallow_query_text_map_2 = load_queries(corpus_queries_path_2)
-    # Combine the two query text maps
-    shallow_query_text_map = {
-        **shallow_query_text_map_1,
-        **shallow_query_text_map_2,
-    }
+print(set(shallow_query_text_map_3.keys()) - set(shallow_query_text_map_2.keys()))
+# print(len(shallow_query_text_map_2.keys()))
 
-    seed = 92
-    shallow_qrels_by_query_id = load_qrels(
-        [shallow_qrel_file_1, shallow_qrel_file_2]
-    )
+# shallow_query_text_map = {
+#     **shallow_query_text_map_1,
+#     **shallow_query_text_map_2,
+# }
 
-    spinner.succeed("Queries and qrels loaded.")
-
-    spinner.start("Creating depth-based training set...")
-    # Create Depth-based training set
-    depth_training_set1 = create_shallow_training_set(
-        depth_qrels_by_query_id, wt_query_text_map, 31, 50, seed=seed
-    )
-
-    depth_training_set2 = create_shallow_training_set(
-        depth_qrels_by_query_id, wt_query_text_map, 45, 25, seed=seed
-    )
-
-    spinner.succeed("Training set created.")
-
-    spinner.start("Creating shallow-based training set...")
-    # Create Shallow-based training set
-    shallow_training_set = create_shallow_training_set(
-        shallow_qrels_by_query_id, shallow_query_text_map, 752, 1, seed=seed
-    )
-
-
-    spinner.start("Converting to Huggingface dataset...")
-    # Convert to Huggingface dataset
-    depth_dataset1 = training_set_to_dataset(
-        depth_training_set1, wt_query_text_map, doc_text_map
-    )
-
-    depth_dataset2 = training_set_to_dataset(
-        depth_training_set2, wt_query_text_map, doc_text_map
-    )
-
-    shallow_dataset = training_set_to_dataset(
-        shallow_training_set, shallow_query_text_map, doc_text_map
-    )
-    spinner.succeed("Dataset created.")
-
-    spinner.start("Saving dataset...")
-    # Save the dataset
-    depth_dataset1.save_to_disk(f"../data/longeval/bm25/{seed}/depth_based_31_50_50")
-    depth_dataset2.save_to_disk(f"../data/longeval/bm25/{seed}/depth_based_45_25_50")
-    shallow_dataset.save_to_disk(f"../data/longeval/bm25/{seed}/shallow_based_754_1_1")
-    spinner.succeed("Dataset saved.")
+# print(shallow_query_text_map)

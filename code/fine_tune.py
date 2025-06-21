@@ -4,7 +4,7 @@ import logging
 import os
 
 # Specify the GPU ID to use
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 import torch  # noqa: E402
@@ -26,18 +26,18 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-seed = 92
+seed = 5
 
-dataset = "depth_based_70_30_180"
+dataset = "shallow_based_754_1_1"
 # Configs
 DATASET_PATH = (
-    f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/{dataset}/"
+    f"../data/longeval/bm25/{seed}/{dataset}/"
 )
 MODEL_SAVE_PATH = (
-    f"../data/results/models/v2/bm25/one_to_one/{seed}/{dataset}/"
+    f"../data/results/models/longeval/bm25/one_to_one/{seed}/{dataset}/"
 )
 CHECKPOINT_PATH = (
-    f"../data/results/checkpoints/v2/bm25/one_to_one/{seed}/{dataset}/"
+    f"../data/results/checkpoints/longeval/bm25/one_to_one/{seed}/{dataset}/"
 )
 
 
@@ -57,7 +57,6 @@ def tokenize_function(tokenizer, examples):
         max_length=512,
         return_tensors="pt",
     )
-
 
 def compute_metrics(pred):
     labels = pred.label_ids

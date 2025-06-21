@@ -270,92 +270,92 @@ if __name__ == "__main__":
     # Generate training sets
 
     # Depth based training sets
-    spinner.start("Creating depth-based training sets...")
-    depth_based_1 = create_training_set(
-        dataset_trec_2019,
-        combined_query_text_map,
-        50,
-        50,
-        neg_sample_prop=4,
-        seed=seed,
-        combine_trec_datasets=True,
-    )
-    spinner.succeed("Depth-based 1 training set created.")
-    check_training_set(depth_based_1)
+    # spinner.start("Creating depth-based training sets...")
+    # depth_based_1 = create_training_set(
+    #     dataset_trec_2019,
+    #     combined_query_text_map,
+    #     50,
+    #     50,
+    #     neg_sample_prop=20,
+    #     seed=seed,
+    #     combine_trec_datasets=True,
+    # )
+    # spinner.succeed("Depth-based 1 training set created.")
+    # check_training_set(depth_based_1)
 
-    spinner.start("Creating depth-based training sets...")
-    depth_based_2 = create_training_set(
-        dataset_trec_2019,
-        combined_query_text_map,
-        50,
-        50,
-        neg_sample_prop=6,
-        seed=seed,
-        combine_trec_datasets=True,
-    )
-    spinner.succeed("Depth-based 2 training set created.")
-    check_training_set(depth_based_2)
+    # spinner.start("Creating depth-based training sets...")
+    # depth_based_2 = create_training_set(
+    #     dataset_trec_2019,
+    #     combined_query_text_map,
+    #     70,
+    #     30,
+    #     neg_sample_prop=20,
+    #     seed=seed,
+    #     combine_trec_datasets=True,
+    # )
+    # spinner.succeed("Depth-based 2 training set created.")
+    # check_training_set(depth_based_2)
 
-    spinner.start("Creating depth-based training sets...")
-    depth_based_3 = create_training_set(
-        dataset_trec_2019,
-        combined_query_text_map,
-        70,
-        30,
-        neg_sample_prop=4,
-        seed=seed,
-        combine_trec_datasets=True,
-    )
-    spinner.succeed("Depth-based 3 training set created.")
-    check_training_set(depth_based_3)
+    # spinner.start("Creating depth-based training sets...")
+    # depth_based_3 = create_training_set(
+    #     dataset_trec_2019,
+    #     combined_query_text_map,
+    #     70,
+    #     30,
+    #     neg_sample_prop=8,
+    #     seed=seed,
+    #     combine_trec_datasets=True,
+    # )
+    # spinner.succeed("Depth-based 3 training set created.")
+    # check_training_set(depth_based_3)
 
-    spinner.start("Creating depth-based training sets...")
-    depth_based_4 = create_training_set(
-        dataset_trec_2019,
-        combined_query_text_map,
-        70,
-        30,
-        neg_sample_prop=6,
-        seed=seed,
-        combine_trec_datasets=True,
-    )
-    spinner.succeed("Depth-based 4 training set created.")
-    check_training_set(depth_based_4)
+    # spinner.start("Creating depth-based training sets...")
+    # depth_based_4 = create_training_set(
+    #     dataset_trec_2019,
+    #     combined_query_text_map,
+    #     70,
+    #     30,
+    #     neg_sample_prop=10,
+    #     seed=seed,
+    #     combine_trec_datasets=True,
+    # )
+    # spinner.succeed("Depth-based 4 training set created.")
+    # check_training_set(depth_based_4)
 
     spinner.succeed("Depth-based training sets created.")
 
     # Shallow based training sets
-    spinner.start("Creating shallow-based training sets...")
-    shallow_based_1 = create_training_set(
-        dataset_train,
-        query_text_map_train,
-        2500,
-        1,
-        neg_sample_prop=4,
-        seed=seed,
-    )
-    spinner.succeed("Shallow-based 1 training set created.")
-    check_training_set(shallow_based_1)
+    # spinner.start("Creating shallow-based training sets...")
+    # shallow_based_1 = create_training_set(
+    #     dataset_train,
+    #     query_text_map_train,
+    #     2100,
+    #     1,
+    #     neg_sample_prop=8,
+    #     seed=seed,
+    # )
+    # spinner.succeed("Shallow-based 1 training set created.")
+    # check_training_set(shallow_based_1)
 
-    spinner.start("Creating shallow-based training sets...")
-    shallow_based_2 = create_training_set(
-        dataset_train,
-        query_text_map_train,
-        2500,
-        1,
-        neg_sample_prop=6,
-        seed=seed,
-    )
-    spinner.succeed("Shallow-based 2 training set created.")
-    check_training_set(shallow_based_2)
+    # spinner.start("Creating shallow-based training sets...")
+    # shallow_based_2 = create_training_set(
+    #     dataset_train,
+    #     query_text_map_train,
+    #     1000,
+    #     1,
+    #     neg_sample_prop=1,
+    #     seed=seed,
+    # )
+    # spinner.succeed("Shallow-based 2 training set created.")
+    # check_training_set(shallow_based_2)
 
     spinner.start("Creating shallow-based training sets...")
     shallow_based_3 = create_training_set(
         dataset_train,
         query_text_map_train,
-        2100,
+        50,
         1,
-        neg_sample_prop=4,
+        neg_sample_prop=1,
         seed=seed,
     )
     spinner.succeed("Shallow-based 3 training set created.")
@@ -365,57 +365,57 @@ if __name__ == "__main__":
     shallow_based_4 = create_training_set(
         dataset_train,
         query_text_map_train,
-        2100,
+        25,
         1,
-        neg_sample_prop=6,
+        neg_sample_prop=1,
         seed=seed,
     )
     spinner.succeed("Shallow-based 4 training set created.")
     check_training_set(shallow_based_4)
 
-    spinner.succeed("Shallow-based training sets created.")
+    # spinner.succeed("Shallow-based training sets created.")
 
     # Shuffle the training sets
     random.seed(30)
-    random.shuffle(depth_based_1)
-    random.shuffle(depth_based_2)
-    random.shuffle(shallow_based_1)
-    random.shuffle(shallow_based_2)
+    # random.shuffle(depth_based_1)
+    # random.shuffle(depth_based_2)
+    # random.shuffle(shallow_based_1)
+    # random.shuffle(shallow_based_2)
 
-    random.shuffle(depth_based_3)
-    random.shuffle(depth_based_4)
+    # random.shuffle(depth_based_3)
+    # random.shuffle(depth_based_4)
     random.shuffle(shallow_based_3)
     random.shuffle(shallow_based_4)
 
     # Convert to Huggingface datasets
-    spinner.start("Convert to Huggingface datasets...")
-    hf_dataset_depth_1 = training_set_to_dataset(
-        depth_based_1,
-        combined_query_text_map,
-        combined_doc_text_map,
-    )
-    hf_dataset_depth_2 = training_set_to_dataset(
-        depth_based_2,
-        combined_query_text_map,
-        combined_doc_text_map,
-    )
-    hf_dataset_shallow_1 = training_set_to_dataset(
-        shallow_based_1, query_text_map_train, doc_text_map_train
-    )
-    hf_dataset_shallow_2 = training_set_to_dataset(
-        shallow_based_2, query_text_map_train, doc_text_map_train
-    )
+    # spinner.start("Convert to Huggingface datasets...")
+    # hf_dataset_depth_1 = training_set_to_dataset(
+    #     depth_based_1,
+    #     combined_query_text_map,
+    #     combined_doc_text_map,
+    # )
+    # hf_dataset_depth_2 = training_set_to_dataset(
+    #     depth_based_2,
+    #     combined_query_text_map,
+    #     combined_doc_text_map,
+    # )
+    # hf_dataset_shallow_1 = training_set_to_dataset(
+    #     shallow_based_1, query_text_map_train, doc_text_map_train
+    # )
+    # hf_dataset_shallow_2 = training_set_to_dataset(
+    #     shallow_based_2, query_text_map_train, doc_text_map_train
+    # )
 
-    hf_dataset_depth_3 = training_set_to_dataset(
-        depth_based_3,
-        combined_query_text_map,
-        combined_doc_text_map,
-    )
-    hf_dataset_depth_4 = training_set_to_dataset(
-        depth_based_4,
-        combined_query_text_map,
-        combined_doc_text_map,
-    )
+    # hf_dataset_depth_3 = training_set_to_dataset(
+    #     depth_based_3,
+    #     combined_query_text_map,
+    #     combined_doc_text_map,
+    # )
+    # hf_dataset_depth_4 = training_set_to_dataset(
+    #     depth_based_4,
+    #     combined_query_text_map,
+    #     combined_doc_text_map,
+    # )
     hf_dataset_shallow_3 = training_set_to_dataset(
         shallow_based_3, query_text_map_train, doc_text_map_train
     )
@@ -426,34 +426,34 @@ if __name__ == "__main__":
     spinner.succeed("Huggingface datasets created.")
 
     # Save the datasets
-    spinner.start("Saving datasets...")
-    hf_dataset_depth_1.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_50_50_200"
-    )
-    hf_dataset_depth_2.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_50_50_300"
-    )
+    # spinner.start("Saving datasets...")
+    # hf_dataset_depth_1.save_to_disk(
+    #     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_50_50_1000"
+    # )
+    # hf_dataset_depth_2.save_to_disk(
+    #     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_600"
+    # )
 
-    hf_dataset_shallow_1.save_to_disk(
-       f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2500_1_4"
-    )
+    # hf_dataset_shallow_1.save_to_disk(
+    #    f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2100_1_8"
+    # )
 
-    hf_dataset_shallow_2.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2500_1_6"
-    )
+    # hf_dataset_shallow_2.save_to_disk(
+    #     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_1000_1_1"
+    # )
 
-    hf_dataset_depth_3.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_120"
-    )
-    hf_dataset_depth_4.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_180"
-    )
+    # hf_dataset_depth_3.save_to_disk(
+    #     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_240"
+    # )
+    # hf_dataset_depth_4.save_to_disk(
+    #     f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/depth_based_70_30_300"
+    # )
 
     hf_dataset_shallow_3.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2100_1_4"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_50_1_1"
     )
     hf_dataset_shallow_4.save_to_disk(
-        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_2100_1_6"
+        f"../data/hf_datasets/msmarcov1/test/bm25/one_to_one/v2/{seed}/shallow_based_25_1_1"
     )
 
     spinner.succeed("Huggingface datasets saved.")

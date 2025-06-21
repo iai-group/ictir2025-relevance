@@ -5,7 +5,7 @@ import json
 import logging
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 import ir_datasets  # noqa: E402
 import torch  # noqa: E402
@@ -41,18 +41,18 @@ def load_queries(query_file):
 
 
 # Load the index
-searcher = LuceneSearcher.from_prebuilt_index("msmarco-v1-passage")
-# searcher = LuceneSearcher("../data/indexes/longeval_st_index/")
+# searcher = LuceneSearcher.from_prebuilt_index("msmarco-v1-passage")
+searcher = LuceneSearcher("../data/indexes/longeval_test_long_september/")
 
 # Set the seed
-seed = "92"
+seed = "42"
 
 # dataset name
-dataset_name = "depth_based_70_30_180"
+dataset_name = "depth_based_31_50_50"
 
 # Load model and tokenizer
-model_path = f"/home/stud/giturra/bhome/deep_vs_shallow/data/results/models/v2/bm25/one_to_one/{seed}/{dataset_name}"
-# model_path = "bert-base-uncased"
+# model_path = f"/home/stud/giturra/bhome/deep_vs_shallow/data/results/models/longeval/bm25/one_to_one/{seed}/{dataset_name}"
+model_path = "bert-base-uncased"
 logging.info(f"Loading model and tokenizer from: {model_path}")
 tokenizer = BertTokenizer.from_pretrained(model_path)
 model = BertForSequenceClassification.from_pretrained(model_path)
@@ -60,23 +60,23 @@ model.to(device)
 model.eval()
 
 # Load queries
-query_dataset = ir_datasets.load("msmarco-passage/dev/2")
-# query_dataset_path = "../data/collections/longeval/test-collection/A-Short-July/English/Queries/test07.tsv"
+# query_dataset = ir_datasets.load("msmarco-passage/dev/2")
+query_dataset_path = "../data/collections/longeval/test/test-collection/B-Long-September/English/Queries/test09.tsv"
 
 # MSMARCO
-queries = {}
-for query in query_dataset.queries_iter():
-    queries[query.query_id] = query.text
+# queries = {}
+# for query in query_dataset.queries_iter():
+#     queries[query.query_id] = query.text
 
 # Longeval
-# queries = load_queries(query_dataset_path)
+queries = load_queries(query_dataset_path)
 
 logging.info(f"Loaded {len(queries)} queries.")
 
 # Setting up the run file
 
-run_file_path = f"../data/results/runs/v2/{seed}/{dataset_name}.txt"
-run_name = f"seed_{seed}_{dataset_name}_msmarcov1"
+run_file_path = f"../data/results/runs/longeval/september/baseline-september-longeval"
+run_name = f"seed_{seed}_{dataset_name}_longeval_baseline_september"
 
 # Create the directory if it does not exist
 directory = os.path.dirname(run_file_path)

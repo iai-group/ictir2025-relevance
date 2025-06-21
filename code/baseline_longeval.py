@@ -26,15 +26,15 @@ def load_queries(query_file):
 
 
 # Load the prebuilt index
-searcher = LuceneSearcher("../data/indexes/longeval_st_index/")
-
+# searcher = LuceneSearcher("/home/stud/giturra/bhome/deep_vs_shallow/data/indexes/longeval_test_short_july")
+searcher = LuceneSearcher("/home/stud/giturra/bhome/deep_vs_shallow/data/indexes/longeval_test_long_september")
 # Load queries
-query_dataset_path = "../data/collections/longeval/test-collection/A-Short-July/English/Queries/test07.tsv"
+query_dataset_path = "/home/stud/giturra/bhome/deep_vs_shallow/data/collections/longeval/test/test-collection/B-Long-September/English/Queries/test09.tsv"
 queries = load_queries(query_dataset_path)
 logging.info(f"Loaded {len(queries)} queries.")
 
 # Setting up the run file for the BM25 baseline
-run_file_path = "../data/results/runs/longeval_baseline_st_run.txt"
+run_file_path = "../data/results/runs/longeval/september/longeval_baseline_st_run.txt"
 run_name = "longeval_st-bm25-baseline"
 
 # Generate the run file

@@ -5,7 +5,7 @@ import json
 import logging
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import ir_datasets  # noqa: E402
 import torch  # noqa: E402

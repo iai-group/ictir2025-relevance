@@ -171,7 +171,7 @@ def create_depth_training_set(
     training_set = []
 
     selected_queries = select_queries(
-        qrels_by_query_id, num_queries, num_rels_per_query
+        qrels_by_query_id
     )
 
     for qid, qrels in tqdm(qrels_by_query_id.items()):

@@ -36,6 +36,8 @@ If you find our paper or code useful, please cite the paper:
 @inproceedings{Iturra:2025:ICTIR,
   author = {Iturra-Bocaz, Gabriel and Vo, Danny and Petra Galuscakova},
   title = {Impact of Shallow vs. Deep Relevance Judgments on BERT-based Reranking Models},
+  booktitle = {Proceedings of the 2025 International ACM SIGIR Conference on Innovative Concepts and Theories in Information Retrieval}
+  series = {ICTIR '25},
   year = {2025}
 }
 ```
